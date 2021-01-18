@@ -6,7 +6,6 @@ document.addEventListener('DOMContentLoaded', function() {
   document.querySelector('#compose').addEventListener('click', compose_email);
 
   var sentEmail = localStorage.getItem('emailSent');
-  console.log(sentEmail);
   if(sentEmail == 'true'){
     load_mailbox('sent');
     localStorage.setItem('emailSent', false);
@@ -176,6 +175,9 @@ function reply(email){
   document.querySelector('#compose-subject').value  = (`RE: ${email.subject}`);
   document.querySelector('#compose-body').value = (`On ${email.timestamp} ${email.sender} wrote: ${email.body}`);
 
+  document.querySelector('#sendBtn').addEventListener('click', () => {
+    sendEmail();
+  });
 }
 function compose_email() {
   // Show compose view and hide other views
@@ -190,7 +192,30 @@ function compose_email() {
   document.querySelector('#compose-body').value = '';
 
   document.querySelector('#sendBtn').addEventListener('click', () => {
-    sendEmail();
+    let user = document.getElementById('user').value;
+    let recipient = document.getElementById('compose-recipients').value;
+    let subject = document.getElementById('compose-subject').value;
+    let body = document.getElementById('compose-body').value
+
+    if(recipient == user){
+      alert(`You're not able to send an email to yourself`);
+    }
+    else if(body.length == 0){
+      alert(`The body can't be left blank.`)
+      return false;
+    }
+    else if(subject.length == 0){
+      var subjectless = confirm('This email has no subject, send anyways?');
+        if(subjectless){
+          sendEmail();
+        }
+        else{
+          return false;
+        }
+    }
+    else{
+      sendEmail();
+    }
   });
 }
 
@@ -203,9 +228,14 @@ function sendEmail(){
         body: document.querySelector('#compose-body').value
       })
     })
-    .then(response => response.json())
-    .then(result => {
-      localStorage.setItem('emailSent', true);
+    .then(response => {
+      if(response.status == 400){
+        alert('There are no users with that email address.')
+      }
+      else{
+        localStorage.setItem('emailSent', true);
+        location.reload();
+      }
     })
     .catch(error => {
       console.log("error", error);
