@@ -1,3 +1,8 @@
+  // let date = new Date(email.timestamp);
+  // let offset = date.getTimezoneOffset();
+  // date = date.setHours(date.getHours() - date.getTimezoneOffset());
+  // let trueDate = new Date(offset)
+  // console.log(trueDate.toString());
 document.addEventListener('DOMContentLoaded', function() {
   // Use buttons to toggle between views
   document.querySelector('#inbox').addEventListener('click', () => load_mailbox('inbox'));
@@ -34,6 +39,7 @@ function load_mailbox(mailbox) {
       }
       else {
         data.forEach(email => {
+          console.log(email);
           const sent = document.createElement('div');
           sent.innerHTML = (`To: ${email.recipients} <br> ${email.subject} <br> ${email.timestamp}`);
           sent.addEventListener('click', () => {
@@ -115,6 +121,7 @@ function viewEmail(email){
   fetch(`emails/${email.id}`)
   .then(response => response.json())
   .then(data => {
+    console.log(data);
     const email = document.createElement('div');
     const replyBtn = document.createElement('button');
     const archiveBtn = document.createElement('button');
@@ -172,12 +179,23 @@ function reply(email){
   document.querySelector('#email').style.display = 'none';
 
   document.querySelector('#compose-recipients').value = email.sender;
-  document.querySelector('#compose-subject').value  = (`RE: ${email.subject}`);
-  document.querySelector('#compose-body').value = (`On ${email.timestamp} ${email.sender} wrote: ${email.body}`);
+  if(email.subject.search("RE:") == 0){
+    console.log(email);
+    document.querySelector('#compose-subject').value  = (`${email.subject}`);
+    document.querySelector('#compose-body').value = (`${email.body} THIS `);
 
-  document.querySelector('#sendBtn').addEventListener('click', () => {
-    sendEmail();
-  });
+    document.querySelector('#sendBtn').addEventListener('click', () => {
+      sendEmail();
+    });
+  }
+  else{
+    document.querySelector('#compose-subject').value  = (`RE: ${email.subject}`);
+    document.querySelector('#compose-body').value = (`On ${email.timestamp} ${email.sender} wrote: ${email.body}`);
+    
+    document.querySelector('#sendBtn').addEventListener('click', () => {
+      sendEmail();
+    });
+  }
 }
 function compose_email() {
   // Show compose view and hide other views
@@ -197,12 +215,11 @@ function compose_email() {
     let subject = document.getElementById('compose-subject').value;
     let body = document.getElementById('compose-body').value
 
-    if(recipient == user){
+    if(recipient === user){
       alert(`You're not able to send an email to yourself`);
     }
     else if(body.length == 0){
       alert(`The body can't be left blank.`)
-      return false;
     }
     else if(subject.length == 0){
       var subjectless = confirm('This email has no subject, send anyways?');
@@ -210,7 +227,6 @@ function compose_email() {
           sendEmail();
         }
         else{
-          return false;
         }
     }
     else{
