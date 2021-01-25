@@ -1,8 +1,3 @@
-  // let date = new Date(email.timestamp);
-  // let offset = date.getTimezoneOffset();
-  // date = date.setHours(date.getHours() - date.getTimezoneOffset());
-  // let trueDate = new Date(offset)
-  // console.log(trueDate.toString());
 document.addEventListener('DOMContentLoaded', function() {
   // Use buttons to toggle between views
   document.querySelector('#inbox').addEventListener('click', () => load_mailbox('inbox'));
@@ -39,9 +34,9 @@ function load_mailbox(mailbox) {
       }
       else {
         data.forEach(email => {
-          console.log(email);
+          let time = convertTime(email.timestamp);
           const sent = document.createElement('div');
-          sent.innerHTML = (`To: ${email.recipients} <br> ${email.subject} <br> ${email.timestamp}`);
+          sent.innerHTML = (`<b>From:</b> ${email.sender} <br> <b>Subject:</b> ${email.subject} <br> <b>Time:</b> ${time}`);
           sent.addEventListener('click', () => {
             console.log(`${email.id} was clicked!`);
           });
@@ -66,7 +61,8 @@ function load_mailbox(mailbox) {
             if (email.read == true){
               sent.style.backgroundColor = 'gainsboro';
             }
-            sent.innerHTML = (`From: ${email.sender} <br> ${email.subject} <br> ${email.timestamp}`);
+            let time = convertTime(email.timestamp);
+            sent.innerHTML = (`<b>From:</b> ${email.sender} <br> <b>Subject:</b> ${email.subject} <br> <b>Time:</b> ${time}`);
             sent.addEventListener('click', () => {
               viewEmail(email);
             });
@@ -89,7 +85,8 @@ function load_mailbox(mailbox) {
         data.forEach(email => {
           const archived = document.createElement('div');
           if (email.archived == true) {
-            archived.innerHTML = (`From: ${email.sender} <br> ${email.subject} <br> ${email.timestamp}`);
+            let time = convertTime(email.timestamp);
+            archived.innerHTML = (`<b>From:</b> ${email.sender} <br> <b>Subject:</b> ${email.subject} <br> <b>Time:</b> ${time}`);
             archived.addEventListener('click', () => {
               viewEmail(email);
             });
@@ -121,29 +118,52 @@ function viewEmail(email){
   fetch(`emails/${email.id}`)
   .then(response => response.json())
   .then(data => {
-    console.log(data);
     const email = document.createElement('div');
+    const from = document.createElement('section');
+    const to = document.createElement('section');
+    const timestamp = document.createElement('section');
+    const subject = document.createElement('section');
+    const body = document.createElement('section');
     const replyBtn = document.createElement('button');
     const archiveBtn = document.createElement('button');
+    let time = convertTime(data.timestamp);
     replyBtn.innerHTML = "Reply";
-
+    email.className = "border-bottom"
+    replyBtn.className = "btn btn-outline-primary";
+    archiveBtn.className = "btn btn-outline-primary"
+    archiveBtn.innerHTML = "Unarchive";
+    from.innerHTML = (`<b>From:</b> ${data.sender}`);
+    to.innerHTML = (`<b>To:</b> ${data.recipients}`);
+    timestamp.innerHTML = (`<b>Time:</b> ${time}`);
+    subject.innerHTML = (`<b>Subject:</b> ${data.subject}`);
+    body.innerHTML = (`<b>Body:</b> ${data.body}`);
+  
     if(data.archived == true){
-      archiveBtn.innerHTML = "Unarchive";
-      email.innerHTML = (`From : ${data.sender} <br> To: ${data.recipients} <br>
-        ${data.timestamp} <br>  Subject: ${data.subject} <br> Body: ${data.body}`);
+
+      document.querySelector('#email').append(from);
+      document.querySelector(`#email`).append(to);
+      document.querySelector(`#email`).append(timestamp);
+      document.querySelector(`#email`).append(subject);
+      document.querySelector(`#email`).append(body);
       document.querySelector('#email').append(email);
       document.querySelector('#email').append(archiveBtn);
 
       archiveBtn.addEventListener('click', () => unarchive(data.id));
     }
     else {
+
       archiveBtn.innerHTML = "Archive";
-      email.innerHTML = (`From : ${data.sender} <br> To: ${data.recipients} <br>
-        ${data.timestamp} <br>  Subject: ${data.subject} <br> Body: ${data.body}`);
+      document.querySelector('#email').append(from);
+      document.querySelector(`#email`).append(to);
+      document.querySelector(`#email`).append(timestamp);
+      document.querySelector(`#email`).append(subject);
+      document.querySelector(`#email`).append(body);
+      document.querySelector('#email').append(email);
+      document.querySelector('#email').append(archiveBtn);
       document.querySelector('#email').append(email);
       document.querySelector('#email').append(replyBtn);
       document.querySelector('#email').append(archiveBtn);
-
+      
       archiveBtn.addEventListener('click', () => archive(data.id));
 
       replyBtn.addEventListener('click', () => reply(data));
@@ -159,7 +179,6 @@ function archive(id){
     })
   })
   location.reload();
-  load_mailbox('inbox');
 }
 
 function unarchive(id){
@@ -170,7 +189,6 @@ function unarchive(id){
     })
   })
   location.reload();
-  load_mailbox('inbox');
 }
 
 function reply(email){
@@ -178,21 +196,23 @@ function reply(email){
   document.querySelector('#compose-view').style.display = 'block';
   document.querySelector('#email').style.display = 'none';
 
+  let time = convertTime(email.timestamp);
   document.querySelector('#compose-recipients').value = email.sender;
   if(email.subject.search("RE:") == 0){
-    console.log(email);
     document.querySelector('#compose-subject').value  = (`${email.subject}`);
-    document.querySelector('#compose-body').value = (`${email.body} THIS `);
+    document.querySelector('#compose-body').value = (`${email.body} `);
 
     document.querySelector('#sendBtn').addEventListener('click', () => {
+      console.log(1);
       sendEmail();
     });
   }
   else{
     document.querySelector('#compose-subject').value  = (`RE: ${email.subject}`);
-    document.querySelector('#compose-body').value = (`On ${email.timestamp} ${email.sender} wrote: ${email.body}`);
+    document.querySelector('#compose-body').value = (`On ${time} ${email.sender} wrote: ${email.body}`);
     
     document.querySelector('#sendBtn').addEventListener('click', () => {
+      console.log(2);
       sendEmail();
     });
   }
@@ -256,4 +276,66 @@ function sendEmail(){
     .catch(error => {
       console.log("error", error);
     });
+}
+
+function convertTime(time){
+  let timeStamp = new Date(time);
+  let month = timeStamp.getMonth();
+  switch(month){
+    case 0:
+      month = "Jan"
+      break;
+    case 1: 
+      month = "Feb"
+      break;
+    case 2: 
+      month = "Mar"
+      break;
+    case 3: 
+      month = "Apr"
+      break;
+    case 4: 
+      month = "May"
+      break;
+    case 5: 
+      month = "Jun"
+      break;
+    case 6: 
+      month = "Jul"
+      break;
+    case 7: 
+      month = "Aug"
+      break;
+    case 8: 
+      month = "Sep"
+      break;
+    case 9: 
+      month = "Oct"
+      break;
+    case 10:
+      month = "Nov"
+      break;
+    default:
+      month = "Dec"
+  }
+  let offset = timeStamp.getTimezoneOffset() / 60;
+  timeStamp.setHours(timeStamp.getHours() - offset);
+  
+  if(timeStamp.getHours() > 13){
+    timeStamp.setHours(timeStamp.getHours() - 12);
+  }
+
+  let minutes = timeStamp.getMinutes();
+  if(timeStamp.getMinutes() < 10){
+    minutes = `0${minutes}`
+  }
+  
+  let ampm = ``;
+  if((timeStamp.getHours() + 12) < 12){
+    ampm = 'AM'
+  }
+  else{
+    ampm = 'PM'
+  }
+  return `${month} ${timeStamp.getDate()} ${timeStamp.getFullYear()}, ${timeStamp.getHours()}:${minutes} ${ampm}`;
 }

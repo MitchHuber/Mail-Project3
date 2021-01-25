@@ -8,3 +8,15 @@ textarea {
     border-style: solid;
     border-width: thin;
 }
+#email .border-bottom{
+    margin: 15px 0px;
+}
+#email div{
+    margin: 5px;
+}
+#email .btn{
+    margin: 5px 5px 10px 0px;
+}
+#sendbtn{
+    margin: 5px 5px 10px 0px;
+}
