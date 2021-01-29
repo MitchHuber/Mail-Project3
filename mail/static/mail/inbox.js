@@ -118,6 +118,7 @@ function viewEmail(email){
   fetch(`emails/${email.id}`)
   .then(response => response.json())
   .then(data => {
+    console.log(data);
     const email = document.createElement('div');
     const from = document.createElement('section');
     const to = document.createElement('section');
@@ -199,13 +200,32 @@ function reply(email){
   let time = convertTime(email.timestamp);
   document.querySelector('#compose-recipients').value = email.sender;
   if(email.subject.search("RE:") == 0){
+    fetch('/emails/sent')
+    .then(response => response.json())
+    .then(data => {
+      for(let i = 0; i < data.length; i++){
+        console.log(data[i]);
+        console.log(email);
+        if(email.body.includes(convertTime(data[i].timestamp))){
+          //This is the end of the first message 
+          first = email.body.lastIndexOf(data[i].body) + data[i].body.length;
+          firstMessage = email.body.slice(0, first) + '\n' + '\n';
+          resp = email.body.slice((first + 1), -1);
+          message = firstMessage + resp;
+          //This is where the reply begins & where the message ends
+        }
+        else{
+          console.log(`DAMN`);
+        }
+    }
     document.querySelector('#compose-subject').value  = (`${email.subject}`);
-    document.querySelector('#compose-body').value = (`${email.body} `);
+    document.querySelector('#compose-body').value = (`${message} `);
 
     document.querySelector('#sendBtn').addEventListener('click', () => {
       console.log(1);
       sendEmail();
     });
+  });
   }
   else{
     document.querySelector('#compose-subject').value  = (`RE: ${email.subject}`);
@@ -318,8 +338,8 @@ function convertTime(time){
     default:
       month = "Dec"
   }
-  let offset = timeStamp.getTimezoneOffset() / 60;
-  timeStamp.setHours(timeStamp.getHours() - offset);
+
+  timeStamp.setHours(timeStamp.getHours() - (timeStamp.getTimezoneOffset() / 60));
   
   if(timeStamp.getHours() > 13){
     timeStamp.setHours(timeStamp.getHours() - 12);
