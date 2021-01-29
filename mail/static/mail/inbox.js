@@ -118,7 +118,6 @@ function viewEmail(email){
   fetch(`emails/${email.id}`)
   .then(response => response.json())
   .then(data => {
-    console.log(data);
     const email = document.createElement('div');
     const from = document.createElement('section');
     const to = document.createElement('section');
@@ -202,27 +201,22 @@ function reply(email){
   if(email.subject.search("RE:") == 0){
     fetch('/emails/sent')
     .then(response => response.json())
-    .then(data => {
-      for(let i = 0; i < data.length; i++){
-        console.log(data[i]);
+    .then(sent => {
+      for(let i = 0; i < sent.length; i++){
+        console.log(sent[i]);
         console.log(email);
-        if(email.body.includes(convertTime(data[i].timestamp))){
-          //This is the end of the first message 
-          first = email.body.lastIndexOf(data[i].body) + data[i].body.length;
-          firstMessage = email.body.slice(0, first) + '\n' + '\n';
-          resp = email.body.slice((first + 1), -1);
-          message = firstMessage + resp;
-          //This is where the reply begins & where the message ends
-        }
-        else{
-          console.log(`DAMN`);
+        if(email.body.includes(convertTime(sent[i].timestamp))){
+          let first = email.body.lastIndexOf(sent[i].body) + sent[i].body.length;
+          let initialMessage = `${email.body.slice(0, first)}` + '\n';
+          let response = email.body.slice((first + 1), -1);
+          let format = '\n' + `On ${convertTime(email.timestamp)} ${email.sender} wrote: ${response.trim()}`;
+
+          document.querySelector('#compose-subject').value  = (`${email.subject}`);
+          document.querySelector('#compose-body').value = (initialMessage + format);
         }
     }
-    document.querySelector('#compose-subject').value  = (`${email.subject}`);
-    document.querySelector('#compose-body').value = (`${message} `);
 
     document.querySelector('#sendBtn').addEventListener('click', () => {
-      console.log(1);
       sendEmail();
     });
   });
@@ -232,7 +226,6 @@ function reply(email){
     document.querySelector('#compose-body').value = (`On ${time} ${email.sender} wrote: ${email.body}`);
     
     document.querySelector('#sendBtn').addEventListener('click', () => {
-      console.log(2);
       sendEmail();
     });
   }
