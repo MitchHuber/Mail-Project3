@@ -203,23 +203,28 @@ function reply(email){
     .then(response => response.json())
     .then(sent => {
       for(let i = 0; i < sent.length; i++){
-        console.log(sent[i]);
-        console.log(email);
-        if(email.body.includes(convertTime(sent[i].timestamp))){
-          let first = email.body.lastIndexOf(sent[i].body) + sent[i].body.length;
-          let initialMessage = `${email.body.slice(0, first)}` + '\n';
-          let response = email.body.slice((first + 1), -1);
-          let format = '\n' + `On ${convertTime(email.timestamp)} ${email.sender} wrote: ${response.trim()}`;
-
-          document.querySelector('#compose-subject').value  = (`${email.subject}`);
-          document.querySelector('#compose-body').value = (initialMessage + format);
+        let inital = email.body.split('AM').length - 1 + email.body.split('PM').length - 1;
+        let reply = sent[i].body.split('AM').length - 1 + sent[i].body.split('PM').length - 1;
+        // Checks to see if the thread has more than 1 message
+        if(inital == (reply + 1)){
+          fetch(`emails/${sent[i].id}`)
+          .then(response => response.json())
+          .then(data => {
+            if(email.body.includes(convertTime(data.timestamp))){
+              if(email.body.includes(convertTime(data.timestamp))){
+                let initialmessage = `On ${convertTime(data.timestamp)} ${data.sender} wrote: `.length + data.body.length;
+                let reply = `On ${convertTime(email.timestamp)} ${email.sender} wrote: ${email.body.slice(initialmessage).trim()}`;
+                document.querySelector('#compose-subject').value  = (`${email.subject}`);
+                document.querySelector('#compose-body').value = (email.body.slice(0, initialmessage + 1).trim() + '\n' + reply);
+              }    
+            }  
+          });
         }
-    }
-
-    document.querySelector('#sendBtn').addEventListener('click', () => {
-      sendEmail();
+      } 
+      document.querySelector('#sendBtn').addEventListener('click', () => {
+        sendEmail();
+      });
     });
-  });
   }
   else{
     document.querySelector('#compose-subject').value  = (`RE: ${email.subject}`);
