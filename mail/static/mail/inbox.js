@@ -211,13 +211,11 @@ function reply(email){
           .then(response => response.json())
           .then(data => {
             if(email.body.includes(convertTime(data.timestamp))){
-              if(email.body.includes(convertTime(data.timestamp))){
                 let initialmessage = `On ${convertTime(data.timestamp)} ${data.sender} wrote: `.length + data.body.length;
                 let reply = `On ${convertTime(email.timestamp)} ${email.sender} wrote: ${email.body.slice(initialmessage).trim()}`;
                 document.querySelector('#compose-subject').value  = (`${email.subject}`);
                 document.querySelector('#compose-body').value = (email.body.slice(0, initialmessage + 1).trim() + '\n' + reply);
-              }    
-            }  
+              }     
           });
         }
       } 
